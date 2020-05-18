@@ -106,7 +106,7 @@
         android:layout_height="49dp"
         android:background="@drawable/bg_rb"
         android:numStars="5"
-        android:stepSize="0.5"
+        android:stepSize="0.1"
         app:layout_constraintEnd_toEndOf="@+id/priceTextView"
         app:layout_constraintHorizontal_bias="0.444"
         app:layout_constraintStart_toStartOf="@+id/priceTextView"
@@ -127,30 +127,14 @@
             android:text="Submit Rating"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <Button
+        <com.airbnb.lottie.LottieAnimationView
             android:id="@+id/favButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:onClick="addFav"
-            android:text="Add Fav"
-            app:layout_constraintEnd_toEndOf="parent">
-
-        </Button>
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            app:lottie_speed="2"
+            android:onClick="addFav" />
 
     </LinearLayout>
 
-
-
-    <TextView
-        android:id="@+id/rateText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="TextView"
-        app:layout_constraintEnd_toStartOf="@+id/buttonsLayout"
-        app:layout_constraintHorizontal_bias="0.384"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.View.VISIBLE
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.RatingBar
@@ -17,11 +18,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_product.*
-import kotlinx.android.synthetic.main.recycler_view_row.*
-import java.time.Month
-import java.time.MonthDay
-import java.time.Year
-import java.time.YearMonth
+
 
 class ProductActivity : AppCompatActivity() {
 
@@ -36,7 +33,7 @@ class ProductActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if(item.itemId == R.id.favs){
             val intent = Intent(applicationContext,
-                StoreProductActivity::class.java)
+                SavedProductActivity::class.java)
             startActivity(intent)
             finish()
         }
@@ -57,12 +54,14 @@ class ProductActivity : AppCompatActivity() {
     var userDate : ArrayList<String> = ArrayList()
     var adapter : ProductAdapter? = null
     var i = 0
-
+    var a = 0
+    var vis = 0
     var tmp : Float = 0F
     var tmp2 : Float = 0F
     var tmp3 : Float = 0F
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_product)
         // actionbar
@@ -71,18 +70,20 @@ class ProductActivity : AppCompatActivity() {
         actionbar.setDisplayHomeAsUpEnabled(true)
         ///////////////////////////////////////////////////////////////////////////////////////////Rating
 
-
         ///////////////////////////////////////////////////////////////////////////////////////////Rating
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
         getDataFromFirestore()
+
+        favButton.setAnimation("saved.json")
+
         //val currentUser = auth.currentUser
 
         //get intent
         val intent2 = intent
         val textviewtext = intent2.getStringExtra("barcodenumbertext")
-       //print(textviewtext)
+        //print(textviewtext)
         if(textviewtext != null) {
             barcodeTextView.text = textviewtext.toString()
         }
@@ -97,7 +98,7 @@ class ProductActivity : AppCompatActivity() {
 
     }
 
-//Back Press
+    //Back Press
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
         return true
@@ -110,14 +111,13 @@ class ProductActivity : AppCompatActivity() {
 
     //COMMENTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
     fun addComment (view: View){
-     //   val comment = commentEditText.text.toString().trim()
+        //   val comment = commentEditText.text.toString().trim()
         val usermail = auth.currentUser?.email.toString()
 
         db.collection("Users").addSnapshotListener { snapshot, exception ->
             if (exception != null){
                 Toast.makeText(applicationContext,exception.localizedMessage?.toString(),Toast.LENGTH_LONG).show()
             }else{
-
                 if (snapshot!=null){
                     if(!snapshot.isEmpty){
                         val documentsUser = snapshot.documents
@@ -167,13 +167,8 @@ class ProductActivity : AppCompatActivity() {
                                 }}}}}}}}
     //COMMENTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
-
-    fun addRate(){
-
-    }
-
-
     fun getDataFromFirestore() {
+        val authEmail = auth.currentUser!!.email.toString()
 
         db.collection("Barcode").addSnapshotListener { snapshot, exception ->
             if (exception != null){
@@ -182,7 +177,6 @@ class ProductActivity : AppCompatActivity() {
                 if (snapshot!=null){
                     if(!snapshot.isEmpty){
                         val documents = snapshot.documents
-                     print(documents)
 
                         for(document in documents ){
 
@@ -191,140 +185,187 @@ class ProductActivity : AppCompatActivity() {
                             val name = document.get("title") as? String
                             val img= document.get("image") as? String
 
-                           if (barcode.toString() == barcodeTextView.text.toString()) {
-                               print(barcode.toString())
-                               Picasso.get().load(img).into(imageView)
-                               titleTextView.text = name.toString()
-                               priceTextView.text = price.toString()
+                            if (barcode.toString() == barcodeTextView.text.toString()) {
+                                vis = 1
+                                rBar.visibility = VISIBLE
+                                button.visibility = VISIBLE
+                                favButton.visibility = VISIBLE
 
+                                Picasso.get().load(img).into(imageView)
+                                titleTextView.text = name.toString()
+                                priceTextView.text = price.toString()
 
-                               //Rating
-                               val rBar = findViewById<RatingBar>(R.id.rBar)
-                               if (rBar != null) {
-                                   val button = findViewById<Button>(R.id.button)
-                                   button?.setOnClickListener {
-                                       var ratePoint = rBar.rating
+                                //Rating
 
-                                       val ProductActivity = intent
-                                       finish()
+                                //Rate auth
+                                db.collection("Rating").addSnapshotListener { snapshot, exception ->
+                                    if (exception != null){
+                                        Toast.makeText(applicationContext,exception.localizedMessage?.toString(),Toast.LENGTH_LONG).show()
+                                    }else{
+                                        if (snapshot!=null){
+                                            if(!snapshot.isEmpty){
+
+                                                val documents = snapshot.documents
+                                                for(document in documents ) {
+                                                    val email = document.get("email") as? String
+                                                    if(email == authEmail){
+                                                        a = 1
+                                                    }
+                                                }}}}}
+                                //Rateauth
+
+                                val rBar = findViewById<RatingBar>(R.id.rBar)
+                                if (rBar != null) {
+                                    val button = findViewById<Button>(R.id.button)
+                                    button?.setOnClickListener {
+                                        var ratePoint = rBar.rating
+
+                                        //Refresh Page
+                                        val ProductActivity = intent
+                                        finish()
                                         startActivity(ProductActivity)
 
-                                       val RatingMap = hashMapOf<String, Any>()
-                                       val rating = ratePoint
-                                       val email = auth.currentUser!!.email.toString()
-                                       val barcode = barcodeTextView.text.toString()
+                                        val RatingMap = hashMapOf<String, Any>()
+                                        val rating = ratePoint
+                                        val email = auth.currentUser!!.email.toString()
+                                        val barcode = barcodeTextView.text.toString()
 
-                                       RatingMap.put("rate", rating)
-                                       RatingMap.put("email", email)
-                                       RatingMap.put("barcode", barcode)
-
-                                       db.collection("Rating").add(RatingMap).addOnCompleteListener { task ->
-                                           //  println("auth current user $auth.currentUser!!.email")
-
-                                       }.addOnFailureListener { exception ->
-                                           Toast.makeText(
-                                               applicationContext,
-                                               exception.localizedMessage?.toString(),
-                                               Toast.LENGTH_LONG
-                                           ).show()
-                                       }
-                                   }}
-
-                               db.collection("Rating").addSnapshotListener { snapshot, exception ->
-                                   if (exception != null){
-                                       Toast.makeText(applicationContext,exception.localizedMessage?.toString(),Toast.LENGTH_LONG).show()
-                                   }else{
-                                       if (snapshot!=null){
-                                           if(!snapshot.isEmpty){
-                                               val documents = snapshot.documents
-                                               i = 0
-                                               for(document in documents ) {
-                                                   i ++
-                                                   //val barcode = document.get("barcode") as? String
-                                                   val email = document.get("email") as? String
-                                                   val rate = document.get("rate") as Number
+                                        RatingMap.put("rate", rating)
+                                        RatingMap.put("email", email)
+                                        RatingMap.put("barcode", barcode)
 
 
-                                                   tmp2 = tmp3
-                                                   tmp= rate.toFloat()
-                                                   tmp3 = tmp + tmp2
+                                        if (a == 0){
+                                            db.collection("Rating").add(RatingMap).addOnCompleteListener { task ->
 
-                                               }
+                                            }.addOnFailureListener { exception ->
+                                                Toast.makeText(
+                                                    applicationContext,
+                                                    exception.localizedMessage?.toString(),
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            }}
+                                        else{
+                                            Toast.makeText(this@ProductActivity, "Bu ürünü daha önce puanladınız!", Toast.LENGTH_SHORT).show()
 
-                                           }
-                                           val sum = tmp3/i
+                                        }
 
-                                           rBar.rating = sum
-                                          // rateText.text = sum.toString()
-                                       }}}
+                                    }}
 
+                                db.collection("Rating").addSnapshotListener { snapshot, exception ->
+                                    if (exception != null){
+                                        Toast.makeText(applicationContext,exception.localizedMessage?.toString(),Toast.LENGTH_LONG).show()
+                                    }else{
+                                        if (snapshot!=null){
+                                            if(!snapshot.isEmpty){
+                                                val documents = snapshot.documents
+                                                i = 0
+                                                for(document in documents ) {
+                                                    i ++
+                                                    //val barcode = document.get("barcode") as? String
+                                                    val email = document.get("email") as? String
+                                                    val rate = document.get("rate") as Number
 
-                               //Comment
-                               db.collection("Comment").orderBy("date",
-                                   Query.Direction.DESCENDING).addSnapshotListener { snapshot, exception ->
-                                   if (exception != null){
-                                       Toast.makeText(applicationContext,exception.localizedMessage?.toString(),Toast.LENGTH_LONG).show()
-                                   }else {
-                                       if (snapshot!=null)
-                                           if(!snapshot.isEmpty){
-                                              userName.clear()
-                                              userComment.clear()
-                                              userDate.clear()
-
-                                               val documents = snapshot.documents
-                                               for(document in documents ){
-
-
-                                       val name = document.get("name") as? String
-                                       val surname = document.get("surname") as? String
-                                       val comment = document.get("comment") as? String
-                                       val barcodeNo = document.get("barcode") as? String
-                                       val timestamp = document.get("date") as Timestamp
-                                       val date = timestamp.toDate()
-
-
-                                                   if (barcodeNo.toString() == barcodeTextView.text.toString() ) {
-
-                                                       if (name != null) {
-                                                           userName.add(name +" "+ surname)
-                                                       }
-
-                                                       if (comment != null) {
-                                                           userComment.add(comment)
-                                                       }
-
-                                                          userDate.add(date.toString())
-
-                                                       adapter!!.notifyDataSetChanged()
-                                                   }
+                                                    tmp2 = tmp3
+                                                    tmp= rate.toFloat()
+                                                    tmp3 = tmp + tmp2
+                                                }
+                                            }
+                                            val sum = tmp3/i
+                                            rBar.rating = sum
+                                        }}}
 
 
-                                               }}}}
-                               // barcodeTextView.text = textviewtext.toString()
-                         }
+                                //Comment
+                                db.collection("Comment").orderBy("date",
+                                    Query.Direction.DESCENDING).addSnapshotListener { snapshot, exception ->
+                                    if (exception != null){
+                                        Toast.makeText(applicationContext,exception.localizedMessage?.toString(),Toast.LENGTH_LONG).show()
+                                    }else {
+                                        if (snapshot!=null)
+                                            if(!snapshot.isEmpty){
+                                                userName.clear()
+                                                userComment.clear()
+                                                userDate.clear()
+
+                                                val documents = snapshot.documents
+                                                for(document in documents ){
 
 
-                        /*
-                           if (nameTextView.text=="TextView"){
-                               nameTextView.text = "Ürün Bulunamadı"
-                               titleTextView.text = ""
-                               imageTextView.text = ""
-                               Toast.makeText(applicationContext,"Ürün Bulunamadı".toString(),Toast.LENGTH_LONG).show()
+                                                    val name = document.get("name") as? String
+                                                    val surname = document.get("surname") as? String
+                                                    val comment = document.get("comment") as? String
+                                                    val barcodeNo = document.get("barcode") as? String
+                                                    val timestamp = document.get("date") as Timestamp
+                                                    val date = timestamp.toDate()
 
-                               var intent = Intent(applicationContext,ScanActivity::class.java)
-                               startActivity(intent)
-                               finish() }
-*/
+
+                                                    if (barcodeNo.toString() == barcodeTextView.text.toString() ) {
+
+                                                        if (name != null) {
+                                                            userName.add(name +" "+ surname)
+                                                        }
+
+                                                        if (comment != null) {
+                                                            userComment.add(comment)
+                                                        }
+
+                                                        userDate.add(date.toString())
+
+                                                        adapter!!.notifyDataSetChanged()
+                                                    }
+
+
+                                                }}}}
+                                // barcodeTextView.text = textviewtext.toString()
+                            }
+                           else{
+                                var vis = 0
+                            }
+
+
+
+
+
+
+                            /*
+                               if (nameTextView.text=="TextView"){
+                                   nameTextView.text = "Ürün Bulunamadı"
+                                   titleTextView.text = ""
+                                   imageTextView.text = ""
+                                   Toast.makeText(applicationContext,"Ürün Bulunamadı".toString(),Toast.LENGTH_LONG).show()
+
+                                   var intent = Intent(applicationContext,ScanActivity::class.java)
+                                   startActivity(intent)
+                                   finish() }
+    */
                             //       else{}
 
-                        }}}}}}
+                        }
+                        if (vis == 0){
+                        rBar.visibility = android.view.View.INVISIBLE
+                        button.visibility = android.view.View.INVISIBLE
+                        favButton.visibility = android.view.View.INVISIBLE
+
+                            val notFoundMap = hashMapOf<String, Any>()
+                            notFoundMap.put("barcode", barcodeTextView.text.toString())
+
+                            db.collection("BarcodeNotFound").add(notFoundMap).addOnCompleteListener { task ->
+                                if (task.isComplete && task.isSuccessful) {
+                                   // Toast.makeText(this@ProductActivity, "Ürün bilgileri kısa süre içerisinde eklenecektir.", Toast.LENGTH_SHORT).show()
+                                }
+                            }.addOnFailureListener{exception ->
+                                Toast.makeText(applicationContext,exception.localizedMessage?.toString(),Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }}}}}
 
 
     //Adding current item to clients favorite list
     fun addFav(view: View) {
-                            val authMail = auth.currentUser?.email.toString()
+        val authMail = auth.currentUser?.email.toString()
 
-                                    val map = hashMapOf<String, String>()
+        val map = hashMapOf<String, String>()
 
         // Barcode verisi alma
         db.collection("Barcode").addSnapshotListener { snapshot, exception ->
@@ -342,27 +383,24 @@ class ProductActivity : AppCompatActivity() {
 
                             if (barcode== barcodeTextView.text.toString()) {
                                 map.put("image", img.toString())}}
-        // Barcode verisi alma//
-                                map.put("email", authMail)
-                                map.put("barcode", barcodeTextView.text.toString())
-                                map.put("title", titleTextView.text.toString())
-                                map.put("price", priceTextView.text.toString())
+                        // Barcode verisi alma//
+                        map.put("email", authMail)
+                        map.put("barcode", barcodeTextView.text.toString())
+                        map.put("title", titleTextView.text.toString())
+                        map.put("price", priceTextView.text.toString())
 
 
-
-                                    db.collection("Favorites").add(map)
-                                        .addOnCompleteListener { task ->
-                                            if (task.isSuccessful) {
-                                                Toast.makeText(this@ProductActivity, "This item added to your fav list", Toast.LENGTH_SHORT).show()
-                                            }
-                                        }.addOnFailureListener { exception ->
-                                        Toast.makeText(
-                                            applicationContext,
-                                            exception.localizedMessage?.toString(),
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-
-
-                        }
-}}}}}
+                        db.collection("Favorites").add(map)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    favButton.playAnimation()
+                                    Toast.makeText(this@ProductActivity, "Ürün başarıyla kaydedildi.", Toast.LENGTH_SHORT).show()
+                                }
+                            }.addOnFailureListener { exception ->
+                                Toast.makeText(
+                                    applicationContext,
+                                    exception.localizedMessage?.toString(),
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                    }}}}}}

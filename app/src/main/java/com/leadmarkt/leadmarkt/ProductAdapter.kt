@@ -37,7 +37,7 @@ class ProductAdapter(private val userNameArray: ArrayList<String>, private val u
             commentTextT = view.findViewById(R.id.recyclerComment)
             commentDateT = view.findViewById(R.id.commentDate)
 
-
         }
 
-    }}
+    }
+}

@@ -27,6 +27,7 @@ class ScanActivity : AppCompatActivity() {
     private lateinit var detector: BarcodeDetector
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
+    var refreshCam = 0
 
     // Logout işlemi için menü
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -39,7 +40,7 @@ class ScanActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if(item.itemId == R.id.favs){
             val intent = Intent(applicationContext,
-                StoreProductActivity::class.java)
+                SavedProductActivity::class.java)
             startActivity(intent)
             finish()
         }
@@ -91,13 +92,24 @@ class ScanActivity : AppCompatActivity() {
             .build()
         cameraSurfaceView.holder.addCallback(surfaceCallBack)
         detector.setProcessor(processor)
+
+        refreshCam = 1
+
+
     }
+
+    fun refCam(){
+        if (refreshCam == 1){
+    val ScanActivity = intent
+    finish()
+    startActivity(ScanActivity)}}
 
     private fun askForCameraPermmission() {
         ActivityCompat.requestPermissions(
             this@ScanActivity,
             arrayOf(android.Manifest.permission.CAMERA),
             requestCodeCameraPermission
+
         )
     }
 
@@ -110,10 +122,12 @@ class ScanActivity : AppCompatActivity() {
         if (requestCode == requestCodeCameraPermission && grantResults.isNotEmpty()) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 setupControls()
+
             } else {
                 Toast.makeText(applicationContext, "Permission Denied", Toast.LENGTH_SHORT).show()
             }
         }
+        refCam()
     }
 
     private val surfaceCallBack = object : SurfaceHolder.Callback {
