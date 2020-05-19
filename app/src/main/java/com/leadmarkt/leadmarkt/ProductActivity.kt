@@ -77,7 +77,7 @@ class ProductActivity : AppCompatActivity() {
         getDataFromFirestore()
 
         favButton.setAnimation("saved.json")
-
+        notFound.setAnimation("notfound.json")
         //val currentUser = auth.currentUser
 
         //get intent
@@ -322,41 +322,24 @@ class ProductActivity : AppCompatActivity() {
                            else{
                                 var vis = 0
                             }
-
-
-
-
-
-
-                            /*
-                               if (nameTextView.text=="TextView"){
-                                   nameTextView.text = "Ürün Bulunamadı"
-                                   titleTextView.text = ""
-                                   imageTextView.text = ""
-                                   Toast.makeText(applicationContext,"Ürün Bulunamadı".toString(),Toast.LENGTH_LONG).show()
-
-                                   var intent = Intent(applicationContext,ScanActivity::class.java)
-                                   startActivity(intent)
-                                   finish() }
-    */
-                            //       else{}
-
                         }
                         if (vis == 0){
                         rBar.visibility = android.view.View.INVISIBLE
                         button.visibility = android.view.View.INVISIBLE
                         favButton.visibility = android.view.View.INVISIBLE
-
+                        linearLayout5.visibility = android.view.View.INVISIBLE
+                        nfText.text = "Ürün bulunamadı.\n Yetkililere bildirilmiştir.\n En kısa sürede eklenecektir."
                             val notFoundMap = hashMapOf<String, Any>()
                             notFoundMap.put("barcode", barcodeTextView.text.toString())
 
                             db.collection("BarcodeNotFound").add(notFoundMap).addOnCompleteListener { task ->
                                 if (task.isComplete && task.isSuccessful) {
-                                   // Toast.makeText(this@ProductActivity, "Ürün bilgileri kısa süre içerisinde eklenecektir.", Toast.LENGTH_SHORT).show()
+                                    notFound.playAnimation()
                                 }
                             }.addOnFailureListener{exception ->
                                 Toast.makeText(applicationContext,exception.localizedMessage?.toString(),Toast.LENGTH_LONG).show()
                             }
+
                         }
                     }}}}}
 

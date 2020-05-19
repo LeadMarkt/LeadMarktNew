@@ -10,6 +10,27 @@
     android:paddingRight="10dp"
     tools:context=".ProductActivity">
 
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/notFound"
+        android:layout_width="303dp"
+        android:layout_height="303dp"
+        android:layout_marginTop="88dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:lottie_loop="true"
+        app:lottie_speed="0.5" />
+
+    <TextView
+        android:id="@+id/nfText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="25dp"
+        app:layout_constraintEnd_toEndOf="@+id/notFound"
+        app:layout_constraintStart_toStartOf="@+id/notFound"
+        app:layout_constraintTop_toBottomOf="@+id/notFound" />
+
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="134dp"
