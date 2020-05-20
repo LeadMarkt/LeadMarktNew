@@ -1,7 +1,9 @@
 package com.leadmarkt.leadmarkt
 
+import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.SurfaceHolder
@@ -32,8 +34,29 @@ class RegisterActivity : AppCompatActivity() {
         db = FirebaseFirestore.getInstance()
     }
 
-    fun signUpClicked(view : View) {
+    class NetworkTask(var activity: RegisterActivity) : AsyncTask<Void, Void, Void>(){
+        var dialog = Dialog(activity, android.R.style.Theme_Translucent_NoTitleBar)
+        override fun onPreExecute() {
+            val view = activity.layoutInflater.inflate(R.layout.login_progress_bar,null)
+            dialog.setContentView(view)
+            dialog.setCancelable(false)
+            dialog.show()
+            super.onPreExecute()
+        }
+        override fun doInBackground(vararg params: Void?): Void? {
+            Thread.sleep(3000)
+            return null
+        }
 
+        override fun onPostExecute(result: Void?) {
+            super.onPostExecute(result)
+            dialog.dismiss()
+        }
+
+    }
+
+    fun signUpClicked(view : View) {
+        NetworkTask(this).execute()
         val email = emailText.text.toString().trim()
         val password = passwordText.text.toString().trim()
         val name = nameText.text.toString().trim()
@@ -85,7 +108,7 @@ class RegisterActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     val intent = Intent(applicationContext,ScanActivity::class.java)
                     startActivity(intent)
-                    finish()
+                  //  finish()
                 }
 
             }.addOnFailureListener { exception ->

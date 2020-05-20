@@ -1,7 +1,9 @@
 package com.leadmarkt.leadmarkt
 
 import android.app.Application
+import android.app.Dialog
 import android.content.Intent
+import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -29,16 +31,39 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun signInClicked(view : View) {
 
+    class NetworkTask(var activity: MainActivity) : AsyncTask<Void, Void, Void>(){
+        var dialog = Dialog(activity, android.R.style.Theme_Translucent_NoTitleBar)
+        override fun onPreExecute() {
+            val view = activity.layoutInflater.inflate(R.layout.login_progress_bar,null)
+            dialog.setContentView(view)
+            dialog.setCancelable(false)
+            dialog.show()
+            super.onPreExecute()
+        }
+        override fun doInBackground(vararg params: Void?): Void? {
+            Thread.sleep(3000)
+            return null
+        }
+
+        override fun onPostExecute(result: Void?) {
+            super.onPostExecute(result)
+            dialog.dismiss()
+        }
+
+    }
+
+    fun signInClicked(view : View) {
+        NetworkTask(this).execute()
         if(userEmailText.text.toString() != "" && passwordText.text.toString() != ""){
         auth.signInWithEmailAndPassword(userEmailText.text.toString().trim(),passwordText.text.toString().trim()).addOnCompleteListener { task ->
             if (task.isSuccessful) {
+
                 //Signed In
                 Toast.makeText(applicationContext,"Welcome: ${auth.currentUser?.email.toString()}",Toast.LENGTH_LONG).show()
                 val intent = Intent(applicationContext,ScanActivity::class.java)
                 startActivity(intent)
-                finish()
+              //  finish()
             }
         }.addOnFailureListener { exception ->
             Toast.makeText(applicationContext,exception.localizedMessage.toString(), Toast.LENGTH_LONG).show()
