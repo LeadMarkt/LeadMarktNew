@@ -1,7 +1,9 @@
 package com.leadmarkt.leadmarkt
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -12,12 +14,17 @@ import android.widget.RatingBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.leadmarkt.leadmarkt.Swipe.Listener.SwipeButtonListener
+import com.leadmarkt.leadmarkt.Swipe.SwipeButton
+import com.leadmarkt.leadmarkt.Swipe.SwipeHelper
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_product.*
+import kotlinx.android.synthetic.main.recycler_view_row.*
 
 
 class ProductActivity : AppCompatActivity() {
@@ -95,6 +102,90 @@ class ProductActivity : AppCompatActivity() {
         adapter = ProductAdapter(userName,userComment,userDate)
         recyclerView.adapter = adapter
 
+        //////////Swipe Buttons Actions///////////////
+        val swipe = object: SwipeHelper(this, recyclerView, 200)
+        {
+            override fun instantiateMyButton(
+                viewHolder: RecyclerView.ViewHolder,
+                buffer: MutableList<SwipeButton>
+            ) {
+                buffer.add(SwipeButton(this@ProductActivity,"delete",
+                    30,
+                    0,
+                    Color.parseColor("#999da4"),
+                    object:SwipeButtonListener{
+                        override fun onClick(pos: Int) {
+
+                            ////////////////////////////////////Firebase delete Actions here...////////////////////////
+                            //val commnetDoc = db.collection("Comment")
+                            db.collection("Comment").addSnapshotListener { querySnapshot,
+                                                                           firebaseFirestoreException ->
+                                if (querySnapshot != null){
+                                    if (!querySnapshot.isEmpty){
+                                        val commentDocs = querySnapshot.documents
+
+                                        for (commentdoc in commentDocs){
+
+                                            val comment2Delete = commentdoc.get("comment") as String?
+                                            val name2Delete = commentdoc.get("name") as String?
+                                            val surname2Delete = commentdoc.get("surname") as String?
+                                            val username2Delete = name2Delete + " " + surname2Delete
+
+                                            val comID = commentdoc.id
+
+
+                                            if(recyclerComment.text.toString() == comment2Delete){
+                                                if (recycleruserName.text.toString() == username2Delete){
+                                                    db.collection("Comment").document(commentdoc.id)
+                                                        .delete()
+
+                                                        .addOnSuccessListener { Log.d("Verbose", "Comment successfully deleted!")
+                                                            val adapter = recyclerView.adapter as ProductAdapter
+                                                            adapter.removeAt(viewHolder.adapterPosition)
+                                                            Toast.makeText(applicationContext,comID + "Comment successfully deleted!",Toast.LENGTH_SHORT).show();
+                                                        }
+                                                        .addOnFailureListener { e -> Log.w("Error", "Error deleting document", e)
+                                                            Toast.makeText(getApplicationContext(),"Error",Toast.LENGTH_SHORT).show();  }
+                                                }
+                                                else{
+                                                    Toast.makeText(getApplicationContext(),"Permission Denied \n This is not your comment",Toast.LENGTH_SHORT).show();
+                                                }
+
+
+                                            }
+                                        }
+                                    }
+                                }
+                                else{
+                                    Toast.makeText(getApplicationContext(),"snapshot null",Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                            ////////////////////////////END OF COMMENT DELETE//////////////////////////
+
+                        }
+
+                    }
+                ))
+
+                ////////////////// //Comment Edit Code goes here...///////////////////
+
+                buffer.add(SwipeButton(this@ProductActivity,"update",
+                    30,
+                    0,
+                    Color.parseColor("#FF9502"),
+                    object:SwipeButtonListener{
+                        override fun onClick(pos: Int) {
+                            Toast.makeText(this@ProductActivity,"Update ID"+ pos, Toast.LENGTH_SHORT).show()
+                        }
+
+                    }
+                ))
+                ////////////////////END OF COMMENT EDIT////////////////////
+            }
+        }
+
+        ////////Swipe Ends//////
+
 
     }
 
@@ -122,7 +213,7 @@ class ProductActivity : AppCompatActivity() {
                     if(!snapshot.isEmpty){
                         val documentsUser = snapshot.documents
                         val currentMail = auth.currentUser?.email.toString()
-
+                        //var CID : Int = 0; // Comment ID
                         for(documentUser in documentsUser ){
 
                             val emailFB = documentUser.get("email") as? String
@@ -144,6 +235,7 @@ class ProductActivity : AppCompatActivity() {
                                     if (comment != "") {
                                         commentMap.put("comment", comment)
                                     }
+                                    //commentMap.put("CID", CID) // Comment ID
                                     commentMap.put("comment", comment)
                                     commentMap.put("barcode", barcodeTextView.text.toString())
                                     commentMap.put("date", Timestamp.now())

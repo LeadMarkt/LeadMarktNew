@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-
 class ProductAdapter(private val userNameArray: ArrayList<String>, private val userCommentArray: ArrayList<String>, private val commentDateArray: ArrayList<String>):
     RecyclerView.Adapter<ProductAdapter.UserCommentHolder>() {
 
@@ -25,6 +24,13 @@ class ProductAdapter(private val userNameArray: ArrayList<String>, private val u
         holder.nameTextT?.text = userNameArray[position]
         holder.commentTextT?.text = userCommentArray[position]
         holder.commentDateT?.text = commentDateArray[position]
+    }
+
+    fun removeAt(adapterPosition: Int) {
+        userCommentArray
+        userCommentArray.removeAt(adapterPosition)
+        notifyItemRemoved(adapterPosition)
+
     }
 
     class UserCommentHolder(view: View) : RecyclerView.ViewHolder(view){
